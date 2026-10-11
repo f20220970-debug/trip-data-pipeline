@@ -7,6 +7,24 @@ with GitHub Actions.
 
 **Report:** [reports/pipeline_report.md](reports/pipeline_report.md)
 
+```mermaid
+flowchart LR
+    A["NYC TLC monthly parquet"] -->|"extract.py: download + retries"| B["data/raw"]
+    B -->|"load.py: 8 quality rules"| C{"Pass?"}
+    C -->|"yes"| D["fact_trips"]
+    C -->|"no"| E["quarantine_trips + dq_log"]
+    D --> F["dim_zone, dim_date"]
+    D -->|"COPY partitioned by month"| G["warehouse parquet"]
+    D -->|"sql/*.sql"| H["outputs CSV + report"]
+    I["GitHub Actions monthly"] -.->|"runs"| A
+```
+
+## Key results
+- Processed 5.97M NYC taxi trips (Jan-Feb 2024) in about 35 seconds: 5.77M loaded, 205,732 (3.44%) quarantined across 8 quality rules.
+- Biggest quality issues: zero-distance trips (2.0-2.3%) and negative amounts (1.3%); no missing required fields.
+- Weekday demand peaks at 18:00; average speed drops from 22.7 mph at 04:00 to about 11 mph across 08:00-18:00.
+- Manhattan accounts for 90% of trips; Queens trips average 12.7 miles and $52.71, consistent with airport traffic.
+
 ## Pipeline
 1. **Extract** (`src/extract.py`): downloads each month's trip file and the zone lookup from NYC TLC.
    Idempotent (existing files are skipped) with retries; downloads go to a temporary file first.
@@ -37,14 +55,6 @@ dq_log (run_at, month, rule, failed_rows, total_rows, pct_failed)
 load_log (run_at, month, rows_in, rows_loaded, rows_quarantined)
 ```
 
-## Key results
-## Key results
-- Processed 5.97M NYC taxi trips (Jan-Feb 2024) in about 35 seconds: 5.77M loaded, 205,732 (3.44%) quarantined across 8 quality rules.
-- Biggest quality issues: zero-distance trips (2.0-2.3%) and negative amounts (1.3%); no missing required fields.
-- Weekday demand peaks at 18:00; average speed drops from 22.7 mph at 04:00 to about 11 mph across 08:00-18:00.
-- Manhattan accounts for 90% of trips; Queens trips average 12.7 miles and $52.71, consistent with airport traffic.
-
-## Run it yourself
 ## Run it yourself
 ```bash
 python3.11 -m venv .venv
