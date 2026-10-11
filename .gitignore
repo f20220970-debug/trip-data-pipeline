@@ -1,0 +1,10 @@
+data/raw/*
+!data/raw/.gitkeep
+data/warehouse/*
+!data/warehouse/.gitkeep
+*.duckdb
+*.duckdb.wal
+__pycache__/
+.venv/
+.pytest_cache/
+.DS_Store
