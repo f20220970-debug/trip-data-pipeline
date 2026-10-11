@@ -3,8 +3,8 @@
 ## 1. Load summary
 | run_at | month | rows_in | rows_loaded | rows_quarantined |
 | --- | --- | --- | --- | --- |
-| 2026-10-11 09:15 UTC | 2024-01 | 2964624 | 2867218 | 97406 |
-| 2026-10-11 09:15 UTC | 2024-02 | 3007526 | 2899200 | 108326 |
+| 2026-10-11 09:25 UTC | 2024-01 | 2964624 | 2867218 | 97406 |
+| 2026-10-11 09:25 UTC | 2024-02 | 3007526 | 2899200 | 108326 |
 
 ## 2. Data quality
 Rows are checked against eight rules. Failed rows go to `quarantine_trips` with the first rule they failed; nothing is silently dropped.
