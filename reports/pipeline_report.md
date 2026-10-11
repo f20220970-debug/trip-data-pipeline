@@ -3,8 +3,8 @@
 ## 1. Load summary
 | run_at | month | rows_in | rows_loaded | rows_quarantined |
 | --- | --- | --- | --- | --- |
-| 2026-10-11 09:25 UTC | 2024-01 | 2964624 | 2867218 | 97406 |
-| 2026-10-11 09:25 UTC | 2024-02 | 3007526 | 2899200 | 108326 |
+| 2026-10-11 09:15 UTC | 2024-01 | 2964624 | 2867218 | 97406 |
+| 2026-10-11 09:15 UTC | 2024-02 | 3007526 | 2899200 | 108326 |
 
 ## 2. Data quality
 Rows are checked against eight rules. Failed rows go to `quarantine_trips` with the first rule they failed; nothing is silently dropped.
@@ -55,7 +55,7 @@ Quarantined rows by reason:
 
 ### Analyst commentary
 <!-- COMMENTARY -->
-_Write 3-5 sentences in your own words: data quality, demand pattern, congestion, one recommendation._
+About 3.4% of raw trips failed at least one quality rule, mostly zero-distance trips (2.0-2.3%) and negative amounts (1.3%), which look like cancelled trips and fare reversals rather than real rides; no trips were missing required fields. Weekday demand peaks at 18:00 (about 7,400 trips in that hour), but congestion is spread across the working day: average speed falls from 22.7 mph at 04:00 to about 11 mph from 08:00 to 18:00, slowest at 11:00. Manhattan generates 90% of clean trips, short and cheap at $15 on average, while Queens trips are long and expensive ($52.71, 12.7 miles), consistent with airport traffic. Because speeds stay low through the whole working day, supply planning should cover 08:00-18:00 rather than only the evening peak; and the quality rules should flag the 'Unknown' and 'N/A' zones (about 0.3% of trips) separately.
 <!-- COMMENTARY -->
 
 ## 4. Monthly totals
