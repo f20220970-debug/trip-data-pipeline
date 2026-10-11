@@ -31,9 +31,15 @@ def main(db_path=None) -> dict:
     C.OUTPUTS.mkdir(exist_ok=True)
     res = {}
     print("Analytics")
-    for sql_file in sorted(C.SQL_DIR.glob("*.sql")):
+    sql_files = sorted(p for p in C.SQL_DIR.glob("*.sql") if not p.name.startswith("."))
+    for sql_file in sql_files:
         name = sql_file.stem[3:]
-        df = con.execute(sql_file.read_text()).df()
+        text = sql_file.read_text(encoding="utf-8", errors="replace").strip()
+        result = con.execute(text) if text else None
+        if result is None:          # empty or comment-only file: nothing to run
+            print(f"  skipped {sql_file.name}: no query found")
+            continue
+        df = result.df()
         df.to_csv(C.OUTPUTS / f"{name}.csv", index=False)
         res[name] = df
         print(f"  {name}: {len(df)} rows")

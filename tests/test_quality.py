@@ -55,3 +55,28 @@ def test_rules_and_idempotency(tmp_path):
     assert con.execute("SELECT COUNT(*) FROM quarantine_trips").fetchone()[0] == 7
     con.close()
     assert (tmp_path / "wh" / "fact_trips" / "pickup_month=2024-01").exists()      # partitioned export
+
+
+def test_postgres_load_is_idempotent(tmp_path):
+    """Runs only when a Postgres database is available (DATABASE_URL), e.g. in GitHub Actions."""
+    import os
+    import pytest
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        pytest.skip("DATABASE_URL not set")
+    import psycopg
+    import to_postgres
+
+    raw = make_month(tmp_path)
+    db = tmp_path / "t.duckdb"
+    load.run(months=["2024-01"], db_path=db, raw_dir=raw, warehouse_dir=tmp_path / "wh")
+    with psycopg.connect(url, autocommit=True) as pg:
+        pg.execute("DROP SCHEMA IF EXISTS trips CASCADE")
+    for _ in range(2):   # load twice: must not duplicate
+        to_postgres.run(months=["2024-01"], db_path=db, pg_url=url)
+    with psycopg.connect(url) as pg:
+        assert pg.execute("SELECT COUNT(*) FROM trips.fact_trips").fetchone()[0] == 2
+        parts = pg.execute("SELECT COUNT(*) FROM pg_inherits WHERE inhparent = 'trips.fact_trips'::regclass").fetchone()[0]
+        assert parts == 1
+        pg.execute("DROP SCHEMA trips CASCADE")
+        pg.commit()

@@ -11,6 +11,23 @@ permissions:
 jobs:
   pipeline:
     runs-on: ubuntu-latest
+
+    services:                # a temporary PostgreSQL database for this run
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: trips
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/trips
+
     steps:
       - uses: actions/checkout@v4
 
@@ -22,11 +39,14 @@ jobs:
       - name: Install packages
         run: pip install -r requirements.txt
 
-      - name: Run tests (data-quality rules and idempotency)
+      - name: Run tests (quality rules, idempotent DuckDB and Postgres loads)
         run: pytest -q
 
       - name: Run pipeline (extract -> quality checks + load -> analytics)
         run: python run_pipeline.py
+
+      - name: Load into PostgreSQL and validate against DuckDB
+        run: python src/to_postgres.py
 
       - name: Commit refreshed outputs
         run: |
